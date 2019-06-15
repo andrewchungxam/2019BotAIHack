@@ -53,6 +53,34 @@ namespace Microsoft.BotBuilderSamples.Dialogs
 
         private async Task<DialogTurnResult> ActStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            //// Call LUIS and gather any potential booking details. (Note the TurnContext has the response to the prompt.)
+            //var bookingDetails = stepContext.Result != null
+            //        ?
+            //    await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepContext.Context, cancellationToken)
+            //        :
+            //    new BookingDetails();
+
+            //// In this sample we only have a single Intent we are concerned with. However, typically a scenario
+            //// will have multiple different Intents each corresponding to starting a different child Dialog.
+
+            //// Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.
+            //return await stepContext.BeginDialogAsync(nameof(BookingDialog), bookingDetails, cancellationToken);
+
+            var luisResult = await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepContext.Context, cancellationToken);
+
+            switch(luisResult.Intent)
+            { 
+                case "Book_flight":
+                    //We need to return flight details
+                case "None":
+                case "Cancel":
+                default:
+                    //Default to QnA
+                    await QnAHelper.ExecuteQnAQuery(Configuration, Logger, stepContext.Context, cancellationToken);
+                    return await stepContext.BeginDialogAsync(nameof(MainDialog), null);
+                    
+            }
+
             // Call LUIS and gather any potential booking details. (Note the TurnContext has the response to the prompt.)
             var bookingDetails = stepContext.Result != null
                     ?
