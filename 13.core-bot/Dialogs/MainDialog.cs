@@ -4,6 +4,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CoreBot.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Configuration;
@@ -72,6 +73,9 @@ namespace Microsoft.BotBuilderSamples.Dialogs
             { 
                 case "Book_flight":
                     //We need to return flight details
+
+                    // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.
+                    return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
                 case "None":
                 case "Cancel":
                 default:
@@ -82,17 +86,16 @@ namespace Microsoft.BotBuilderSamples.Dialogs
             }
 
             // Call LUIS and gather any potential booking details. (Note the TurnContext has the response to the prompt.)
-            var bookingDetails = stepContext.Result != null
-                    ?
-                await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepContext.Context, cancellationToken)
-                    :
-                new BookingDetails();
+            //var bookingDetails = stepContext.Result != null
+            //        ?
+            //    await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepContext.Context, cancellationToken)
+            //        :
+            //    new BookingDetails();
 
             // In this sample we only have a single Intent we are concerned with. However, typically a scenario
             // will have multiple different Intents each corresponding to starting a different child Dialog.
 
-            // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.
-            return await stepContext.BeginDialogAsync(nameof(BookingDialog), bookingDetails, cancellationToken);
+
         }
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -100,7 +103,7 @@ namespace Microsoft.BotBuilderSamples.Dialogs
             // If the child dialog ("BookingDialog") was cancelled or the user failed to confirm, the Result here will be null.
             if (stepContext.Result != null)
             {
-                var result = (BookingDetails)stepContext.Result;
+                var result = (BookingDetailsModel)stepContext.Result;
 
                 // Now we have all the booking details call the booking service.
 

@@ -47,6 +47,7 @@ namespace Microsoft.BotBuilderSamples
                     //return bookingDetails; 
 
                     var bookingDetailsModel = new BookingDetailsModel();
+                    bookingDetailsModel.Intent = "Book_flight";
 
                     // We need to get the result from the LUIS JSON which at every level returns an array.
                     bookingDetailsModel.Destination = recognizerResult.Entities["To"]?.FirstOrDefault()?["Airport"]?.FirstOrDefault()?.FirstOrDefault()?.ToString();
@@ -56,7 +57,13 @@ namespace Microsoft.BotBuilderSamples
                     // TIMEX is a format that represents DateTime expressions that include some ambiguity. e.g. missing a Year.
                     bookingDetailsModel.TravelDate = recognizerResult.Entities["datetime"]?.FirstOrDefault()?["timex"]?.FirstOrDefault()?.ToString().Split('T')[0];
 
+
+
                     return bookingDetailsModel;
+                } 
+                else
+                {
+                    return new NoIntentModel() { Intent = intent };
                 }
             }
             catch (Exception e)
@@ -64,6 +71,7 @@ namespace Microsoft.BotBuilderSamples
                 logger.LogWarning($"LUIS Exception: {e.Message} Check your LUIS configuration.");
             }
             return null;
+              
         }
     }
 }
