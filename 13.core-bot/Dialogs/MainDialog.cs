@@ -82,20 +82,7 @@ namespace Microsoft.BotBuilderSamples.Dialogs
                     //Default to QnA
                     await QnAHelper.ExecuteQnAQuery(Configuration, Logger, stepContext.Context, cancellationToken);
                     return await stepContext.BeginDialogAsync(nameof(MainDialog), null);
-                    
             }
-
-            // Call LUIS and gather any potential booking details. (Note the TurnContext has the response to the prompt.)
-            //var bookingDetails = stepContext.Result != null
-            //        ?
-            //    await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepContext.Context, cancellationToken)
-            //        :
-            //    new BookingDetails();
-
-            // In this sample we only have a single Intent we are concerned with. However, typically a scenario
-            // will have multiple different Intents each corresponding to starting a different child Dialog.
-
-
         }
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
