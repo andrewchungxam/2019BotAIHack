@@ -56,5 +56,13 @@ namespace Microsoft.BotBuilderSamples.Bots
                 Content = JsonConvert.DeserializeObject(adaptiveCard),
             };
         }
+
+        protected override async Task OnTokenResponseEventAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
+        {
+            Logger.LogInformation("Running dialog with Token Response Event Activity.");
+
+            // Run the Dialog with the new Token Response Event Activity.
+            await Dialog.Run(turnContext, ConversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using CoreBot.Models;
@@ -93,7 +94,15 @@ namespace Microsoft.BotBuilderSamples.Dialogs
             {
                 var bookingDetails = (BookingDetailsModel)stepContext.Options;
 
-                return await stepContext.EndDialogAsync(bookingDetails, cancellationToken);
+                // Now we have all the booking details call the booking service.
+                // If the call to the booking service was successful tell the user.
+
+                var timeProperty = new TimexProperty(bookingDetails.TravelDate);
+                var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);
+                var msg = $"I have you booked to {bookingDetails.Destination} from {bookingDetails.Origin} on {travelDateMsg}";
+                await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
+                
+                return await stepContext.EndDialogAsync(null, cancellationToken);
             }
             else
             {

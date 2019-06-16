@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.BotBuilderSamples.Bots;
 using Microsoft.BotBuilderSamples.Dialogs;
+using CoreBot.AuthDialogs;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -42,6 +43,9 @@ namespace Microsoft.BotBuilderSamples
 
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
+
+            // possible
+            //services.AddSingleton<AuthDialog>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, DialogAndWelcomeBot<MainDialog>>();
