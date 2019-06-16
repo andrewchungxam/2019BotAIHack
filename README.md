@@ -369,6 +369,7 @@ Another Hint - you'll need to go to your Book_flight intent and scroll over spec
 
 If you want to see your Luis models as json to compare, click Train > Publish.  Then go to Manage > Versions > Click on a Version > Export as Json
 
+
 ### ADDING OUR OWN DIALOGS
 
 We're going to add two more dialogs - an OAuth dialog and then a third-party service call dialog.  In our sample, we'll call Salesforce - you can modify this to what you'd like.
@@ -456,4 +457,10 @@ Change it to:  (We've transfered the SendActivityAsync, changed the name of the 
         }
 ```
 
- 
+We've isolated the dialog.  Now we're going to add the OAuth dialog.
+
+Look through the AuthenicationBot - most of the plumbing is similar to what we've been used for the CoreBot.
+
+The main things we want be looking at are MainDialog and the LogoutDialog.  The 
+
+
