@@ -259,6 +259,11 @@ namespace CoreBot.AuthDialogs
             {
                 //var tokenForCall = "00D4P000000yP4r!ARsAQK8QGHVThqmwsvReWu3HzEMliGhjamqat28EYjUfmEg_OhvuUel9hI2_Mtp8hZc86crOD03aAcICSagr9a89cErgU.eU";
 
+                if (client.DefaultRequestHeaders != null)
+                { 
+                    client.DefaultRequestHeaders.Clear();
+                }
+                
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenForCall);
 
                 request.Method = HttpMethod.Get;
