@@ -130,12 +130,8 @@ namespace Microsoft.BotBuilderSamples.Dialogs
             Configuration = configuration;
             Logger = logger;
 
-
-
-            //DELETE
-            //AddDialog(new NewerDialog());
-
             AddDialog(new AuthDialog(Configuration));
+            AddDialog(new APIDialog(Configuration));
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new BookingDialog());
@@ -195,6 +191,11 @@ namespace Microsoft.BotBuilderSamples.Dialogs
 
                     //Run the AuthBot Dialog
                     return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
+                case "APIDialog_Intent":
+                    //Type something like "Salesforce query" or "I need to check my quota" "I need to check my sales targets"
+
+                    //Run the AuthBot Dialog
+                    return await stepContext.BeginDialogAsync(nameof(APIDialog), luisResult, cancellationToken);
                 case "None":
                 case "Cancel":
                 default:
