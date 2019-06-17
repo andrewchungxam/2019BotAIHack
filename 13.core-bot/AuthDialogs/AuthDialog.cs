@@ -1,71 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog
-//    {
-//    }
-//}
-
-//Copyright(c) Microsoft Corporation.All rights reserved.
-
-//Licensed under the MIT License.
-
-//using System.Threading;
-//using System.Threading.Tasks;
-//using Microsoft.Bot.Builder;
-//using Microsoft.Bot.Builder.Dialogs;
-//using Microsoft.Bot.Schema;
-//using Microsoft.Extensions.Configuration;
-//using Microsoft.Extensions.Logging;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog : LogoutDialog
-//    {
-//        protected readonly ILogger Logger;
-
-//        public AuthDialog(IConfiguration configuration, ILogger<AuthDialog> logger)
-//            : base(nameof(AuthDialog), configuration["ConnectionName"])
-
-//        public AuthDialog(IConfiguration configuration)
-//            : base(nameof(AuthDialog), configuration["ConnectionName"])
-//        {
-//            AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
-//            {
-//                TestPromptStepAsync,
-//            }));
-
-//            The initial child Dialog to run.
-//            InitialDialogId = nameof(WaterfallDialog);
-//        }
-
-//        private async Task<DialogTurnResult> TestPromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-//        {
-//            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Just the first step test."), cancellationToken);
-//            return await stepContext.NextAsync(null, cancellationToken);
-//        }
-//    }
-//}
-
-
-
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog
-//    {
-//    }
-//}
-
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System.Threading;
@@ -80,15 +13,9 @@ namespace CoreBot.AuthDialogs
 {
     public class AuthDialog : LogoutDialog
     {
-        //protected readonly ILogger Logger;
-
-        //public AuthDialog(IConfiguration configuration, ILogger<AuthDialog> logger)
-        //    : base(nameof(AuthDialog), configuration["ConnectionName"])
-
         public AuthDialog(IConfiguration configuration)
             : base(nameof(AuthDialog), configuration["ConnectionName"])
         {
-            //Logger = logger;
 
             AddDialog(new OAuthPrompt(
                 nameof(OAuthPrompt),
@@ -104,7 +31,6 @@ namespace CoreBot.AuthDialogs
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                //TestPromptStepAsync,
                 PromptStepAsync,
                 LoginStepAsync,
                 DisplayTokenPhase1Async,
@@ -114,12 +40,6 @@ namespace CoreBot.AuthDialogs
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
         }
-
-        //private async Task<DialogTurnResult> TestPromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        //{
-        //    await stepContext.Context.SendActivityAsync(MessageFactory.Text("Just the first step test."), cancellationToken);
-        //    return await stepContext.NextAsync(null, cancellationToken);
-        //}
 
         private async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {

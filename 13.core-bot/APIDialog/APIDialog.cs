@@ -1,84 +1,4 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace CoreBot.APIDialog
-//{
-//    public class APIDialog
-//    {
-//    }
-//}
-
-
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog
-//    {
-//    }
-//}
-
-//Copyright(c) Microsoft Corporation.All rights reserved.
-
-//Licensed under the MIT License.
-
-//using System.Threading;
-//using System.Threading.Tasks;
-//using Microsoft.Bot.Builder;
-//using Microsoft.Bot.Builder.Dialogs;
-//using Microsoft.Bot.Schema;
-//using Microsoft.Extensions.Configuration;
-//using Microsoft.Extensions.Logging;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog : LogoutDialog
-//    {
-//        protected readonly ILogger Logger;
-
-//        public AuthDialog(IConfiguration configuration, ILogger<AuthDialog> logger)
-//            : base(nameof(AuthDialog), configuration["ConnectionName"])
-
-//        public AuthDialog(IConfiguration configuration)
-//            : base(nameof(AuthDialog), configuration["ConnectionName"])
-//        {
-//            AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
-//            {
-//                TestPromptStepAsync,
-//            }));
-
-//            The initial child Dialog to run.
-//            InitialDialogId = nameof(WaterfallDialog);
-//        }
-
-//        private async Task<DialogTurnResult> TestPromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-//        {
-//            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Just the first step test."), cancellationToken);
-//            return await stepContext.NextAsync(null, cancellationToken);
-//        }
-//    }
-//}
-
-
-
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
-//namespace CoreBot.AuthDialogs
-//{
-//    public class AuthDialog
-//    {
-//    }
-//}
-
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -98,15 +18,9 @@ namespace CoreBot.AuthDialogs
 {
     public class APIDialog : LogoutDialog
     {
-        //protected readonly ILogger Logger;
-
-        //public AuthDialog(IConfiguration configuration, ILogger<AuthDialog> logger)
-        //    : base(nameof(AuthDialog), configuration["ConnectionName"])
-
         public APIDialog(IConfiguration configuration)
             : base(nameof(APIDialog), configuration["ConnectionName"])
         {
-            //Logger = logger;
 
             AddDialog(new OAuthPrompt(
                 nameof(OAuthPrompt),
@@ -122,7 +36,6 @@ namespace CoreBot.AuthDialogs
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                //TestPromptStepAsync,
                 PromptStepAsync,
                 LoginStepAsync,
                 DisplayTokenPhase1Async,
@@ -134,12 +47,6 @@ namespace CoreBot.AuthDialogs
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
         }
-
-        //private async Task<DialogTurnResult> TestPromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        //{
-        //    await stepContext.Context.SendActivityAsync(MessageFactory.Text("Just the first step test."), cancellationToken);
-        //    return await stepContext.NextAsync(null, cancellationToken);
-        //}
 
         private async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
@@ -190,8 +97,6 @@ namespace CoreBot.AuthDialogs
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text($"Here is your token {tokenResponse.Token}"), cancellationToken);
             }
 
-
-
             //return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             return await stepContext.NextAsync(tokenResponse, cancellationToken: cancellationToken);
 
@@ -204,7 +109,6 @@ namespace CoreBot.AuthDialogs
             var tokenResponse = (TokenResponse)stepContext.Result;
             if (tokenResponse != null)
             {
-                //                var returnedAPIString = await this.SalesforceAPIGetAccountInfo("test");
                 returnedAPIString = await this.SalesforceAPIGetAccountInfo(tokenResponse.Token);
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text($"{returnedAPIString}"), cancellationToken);
             }
@@ -214,18 +118,7 @@ namespace CoreBot.AuthDialogs
             }
 
             return await stepContext.NextAsync(returnedAPIString, cancellationToken: cancellationToken);
-
-            //var tokenResponse = (TokenResponse)stepContext.Result;
-            //if (tokenResponse != null)
-            //{
-            //    await stepContext.Context.SendActivityAsync(MessageFactory.Text($"Here is your token {tokenResponse.Token}"), cancellationToken);
-            //}
-
-            //var returnedAPIString = await this.SalesforceAPIGetAccountInfo("test");
-
-            //await stepContext.Context.SendActivityAsync(MessageFactory.Text($"{returnedAPIString}"), cancellationToken);
-
-            //return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            
         }
 
         private async Task<DialogTurnResult> FormattedJSONSalesforce(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -246,19 +139,10 @@ namespace CoreBot.AuthDialogs
 
         public async Task<string> SalesforceAPIGetAccountInfo(string tokenForCall)
         {
-            //if (string.Equals(sourceLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return text; // No translation required
-            //}
-
-            //var body = new System.Object[] { new { Text = text } };
-            //var requestBody = JsonConvert.SerializeObject(body);
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage())
             {
-                //var tokenForCall = "00D4P000000yP4r!ARsAQK8QGHVThqmwsvReWu3HzEMliGhjamqat28EYjUfmEg_OhvuUel9hI2_Mtp8hZc86crOD03aAcICSagr9a89cErgU.eU";
-
                 if (client.DefaultRequestHeaders != null)
                 { 
                     client.DefaultRequestHeaders.Clear();
@@ -272,22 +156,13 @@ namespace CoreBot.AuthDialogs
                 var GetAccountURL = "/services/data/v39.0/sobjects/Account/";
                 var AccountId = "0014P000027LgWKQA0";
 
-                //request.RequestUri = new Uri($"{TranslateMethodUri}/translate{UriParams}&to={targetLanguage}");
                 request.RequestUri = new Uri($"{baseURL}{GetAccountURL}{AccountId}");
 
-                //request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-                //request.Headers.Add("Ocp-Apim-Subscription-Key", _translatorTextKey);
-                //request.Headers.Add("Bearer Token", tokenForCall);
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
                 var responseBody = await response.Content.ReadAsStringAsync();
                 return responseBody;
                 
-                //var result = JsonConvert.DeserializeObject<List<TextTranslatorResponse>>(responseBody);
-                //return result.First().Translations.First().Text;
-
-                //var apiHelperModel = ApiHelperModel.FromJson(responseBody);
 
             }
         }
@@ -295,7 +170,7 @@ namespace CoreBot.AuthDialogs
 }
 
 
-
+//METHOD FROM AI LAB
 //public async Task<string> Translate(string sourceLanguage, string targetLanguage, string text)
 //{
 //    if (string.Equals(sourceLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
