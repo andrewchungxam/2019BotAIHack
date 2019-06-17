@@ -369,8 +369,9 @@ Another Hint - you'll need to go to your Book_flight intent and scroll over spec
 
 If you want to see your Luis models as json to compare, click Train > Publish.  Then go to Manage > Versions > Click on a Version > Export as Json
 
-
 ### ADDING OUR OWN DIALOGS
+
+##### Working with AuthDialog
 
 We're going to add two more dialogs - an OAuth dialog and then a third-party service call dialog.  In our sample, we'll call Salesforce - you can modify this to what you'd like.
 
@@ -461,6 +462,198 @@ We've isolated the dialog.  Now we're going to add the OAuth dialog.
 
 Look through the AuthenicationBot - most of the plumbing is similar to what we've been used for the CoreBot.
 
-The main things we want be looking at are MainDialog and the LogoutDialog.  The 
+The main things we want be looking at are MainDialog and the LogoutDialog; however there are some bit and pieces that are live elsewhere in the project.  
+You'll also need to add the MicrosoftAppId from the MicrosoftAppPassword from the Azure portal *both* in the AppSettings.json and in the settings in the Azure emulator. 
 
+In case you run into issues, one potential recommendation is to use AuthenticationBot from the official samples.  Make sure it works there, then transfer the rest of the pieces over as necessary.  
 
+Here are the pieces you need from the AuthenticationBot.
+
+First, bringover the LogoutDialog.  Copy it over - the only think you'll need to change is the namespace.
+
+The main operation of the AuthenticationBot lives in the MainDialog.
+
+Let's create a new class AuthDialog in our project where we'll copy over the contents of the MainDialog.
+You'll need to make a few changes including of course the namespace name.
+
+Before, the class was defined like this:
+
+```
+namespace Microsoft.BotBuilderSamples
+{
+    public class MainDialog : LogoutDialog
+    {
+        protected readonly ILogger Logger;
+
+        public MainDialog(IConfiguration configuration, ILogger<MainDialog> logger)
+            : base(nameof(MainDialog), configuration["ConnectionName"])
+        {
+            Logger = logger;
+
+```
+
+We'll need to change it something like this:
+```
+namespace CoreBot.AuthDialogs
+{
+    public class AuthDialog : LogoutDialog
+    {
+        public AuthDialog(IConfiguration configuration)
+            : base(nameof(AuthDialog), configuration["ConnectionName"])
+        {
+
+```
+
+You'll need to add a couple things - when you add a Dialog, you've got to register it so the Bot can keep track of it.
+```
+public MainDialog(IConfiguration configuration, ILogger<MainDialog> logger)
+            : base(nameof(MainDialog))     
+{
+     Configuration = configuration;
+     Logger = logger;
+
+     AddDialog(new AuthDialog(Configuration));
+```
+
+There is one more piece that you'll need to make this work.  
+In the file, DialogAndWelcomeBot.cs you'll need to this:
+```
+        protected override async Task OnTokenResponseEventAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
+        {
+            Logger.LogInformation("Running dialog with Token Response Event Activity.");
+
+            // Run the Dialog with the new Token Response Event Activity.
+            await Dialog.Run(turnContext, ConversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
+        }
+```
+
+In your Luis.ai project, add another Intent called "AuthDialog_Intent".  Then in the MainDialog add the following:
+```
+switch (luisResult.Intent)
+            {
+                case "Book_flight":
+                    //We need to return flight details
+                    // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.
+                    return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
+                case "AuthDialog_Intent":
+                    //Type something like "Oauth card" or "Auth Dialog intent"
+                    //Run the AuthBot Dialog
+                    return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
+                case "None":
+                case "Cancel":
+                default:
+```
+
+You'll then need to follow the details here from the document:
+https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv1%2Ccsharp%2Cbot-oauth#create-your-bot-resource-on-azure
+
+* You'll need a Bot Channel Registration
+* You'll need bot's ID and Password (these will be needed to be added in your project in Visual Studio but also in your emulator).
+* You can create an Azure AD application to test your project as described in the project.  
+However, for this project and the next, we're going to make an app in Salesforce but we still want the redirect URL described in the document (ie. https://token.botframework.com/.auth/web/redirect)
+- There are many official documents and video to create a connected app in saleforce.  Here is one example: https://blog.mkorman.uk/integrating-net-and-salesforce-part-1-rest-api/
+- https://salesforce.stackexchange.com/questions/40346/where-do-i-find-the-client-id-and-client-secret-of-an-existing-connected-app
+
+Run the application, try signing in with your salesforce account and make sure you can aquire the token.
+
+##### Working with a 3rd-party API 
+
+Let's recreate the same Oauth project but extend it.  Let's use the token and then with an HttpClient call Salesforce.
+
+Here's where the apps are.  Here's how to navigate to your apps > Platform Tools > Apps > App Manager
+https://na132.lightning.force.com/lightning/setup/NavigationMenus/home
+
+We need data!  So in salesforce, go through and create an Account and Contact:
+https://na132.lightning.force.com/lightning/page/home
+https://na132.lightning.force.com/lightning/o/Contact/list?filterName=Recent
+https://na132.lightning.force.com/lightning/o/Account/list?filterName=Recent
+You can took look an old contact: https://na132.lightning.force.com/lightning/r/Contact/0034P00002VDKB6QAP/view
+
+Now URL do use to get info from Salesforce?
+
+Look for the API developer reference:
+https://developer.salesforce.com/docs/api-explorer/sobject/Account/get-account-id/try
+
+It gives you the URL:
+GET/services/data/v39.0/sobjects/Account/{Id}
+
+And the base URL - you can find by pressing the gear settings button on the upper right of the live response.	
+
+Press the Gear "Settings" Button on the upper right of the Live Response:  (The "Instance" Url is what you're looking for).
+Connection Settings
+Username:
+myemailaddy@myemail.com
+Instance Url:
+https://na132.salesforce.com
+My Domain:
+<none>
+
+To look for an *Account* from your saleforce account, I pulled up a link like this.  I went to recent accounts:
+https://na132.lightning.force.com/lightning/o/Account/list?filterName=Recent
+
+Clicked an account and you get a url like this:
+https://na132.lightning.force.com/lightning/r/Account/0014P000027LgWKQA0/view
+
+Take the account number after the "Account/" and before the "/view"
+
+Another salesforce link that could be useful:
+https://developer.salesforce.com/docs/api-explorer/sobject/Contact/get-contact-id
+
+I took the JSON:
+https://app.quicktype.io/#l=cs&r=json2csharp
+
+We want to add this class to the project - we'll need this as a helper for when we're parsing through the Json that is returned from Salesforce.
+
+Next copy the AuthDialog into a new class called APIDialog.  Remember to register this APIDailog in your MainDialog class in the same way you did for the AuthDialog.  Also make sure in the switch/case statement - you create new case and new Luis intent - let's name it "APIDialog_Intent"
+```
+case "APIDialog_Intent":
+//Type something like "Salesforce query" or "I need to check my quota" "I need to check my sales targets"
+
+//Run the AuthBot Dialog
+return await stepContext.BeginDialogAsync(nameof(APIDialog), luisResult, cancellationToken);
+```
+
+We need a HttpClient to make the call to salesforce - let's look through some various samples:	
+https://github.com/microsoft/ailab/blob/master/BuildAnIntelligentBot/src/ChatBot/Services/TranslatorTextService.cs
+
+We'll take a look here and create a method that will call the API and then return the JSON string.
+
+```
+public async Task<string> Translate(string sourceLanguage, string targetLanguage, string text)
+        {
+            if (string.Equals(sourceLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                return text; // No translation required
+            }
+
+            var body = new System.Object[] { new { Text = text } };
+            var requestBody = JsonConvert.SerializeObject(body);
+
+            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage())
+            {
+                request.Method = HttpMethod.Post;
+                request.RequestUri = new Uri($"{TranslateMethodUri}/translate{UriParams}&to={targetLanguage}");
+                request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                request.Headers.Add("Ocp-Apim-Subscription-Key", _translatorTextKey);
+
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<List<TextTranslatorResponse>>(responseBody);
+                return result.First().Translations.First().Text;
+            }
+        }
+```
+
+Create a similar method at the end of your class definition, but let's change the name of the method SalesforceAPIGetAccountInfo - you're going to need to pass the token in that we've retrieved in the previous project.
+
+Create two new steps in the waterfall dailog.  One called UnformattedJSONSalesforce and the other called FormattedJSONSalesforce.  
+
+Exercise 1:
+For UnformattedJSONSalesforce, recieve the token from the previous step.  Call the new SalesforceAPIGetAccountInfo("your-token-here") and of course pass the token.  Receive a unformatted json string as the result. Display that in the chat bot.
+
+Exercise 2:
+For FormattedJSONSalesforce, receive the unformatted json from the previous step.  If you've use the https://app.quicktype.io/#l=cs&r=json2csharp link you'll notice at the very top in the comments, it will show how to deserialize the json into the object it detected.
+Use that method and then you should get a C# object.  Then use that to create a better formatted return string for your results.  
+ 
