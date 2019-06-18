@@ -62,7 +62,7 @@ Now re-run your project from Visual Studio.
 Restart the conversation in your Emulator.
 Interact with the bot - and try to trigger Luis to indentify the "Book_flight" intent.
 
-- This code can be found under branch-1-Working-With-Luis
+- The above code can be found under branch-1-Working-With-Luis
 
 ### Working With Luis and QnA Maker
 
@@ -558,6 +558,8 @@ However, for this project and the next, we're going to make an app in Salesforce
 
 Run the application, try signing in with your salesforce account and make sure you can aquire the token.
 
+ - The above code can be found under Branch-3-Working-With-AuthDialog
+
 ##### Working with a 3rd-party API 
 
 Let's recreate the same Oauth project but extend it.  Let's use the token and then with an HttpClient call Salesforce.
@@ -658,5 +660,5 @@ For UnformattedJSONSalesforce, recieve the token from the previous step.  Call t
 Exercise 2:
 For FormattedJSONSalesforce, receive the unformatted json from the previous step.  If you've use the https://app.quicktype.io/#l=cs&r=json2csharp link you'll notice at the very top in the comments, it will show how to deserialize the json into the object it detected.
 Use that method and then you should get a C# object.  Then use that to create a better formatted return string for your results.  
- 
- - This code can be found under Branch-4-Working-With-Luis
+
+ - The above code can be found under Branch-4-Working-With-A-3rd-Party-API
