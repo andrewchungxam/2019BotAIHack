@@ -1,15 +1,17 @@
 # 2019BotAIHack
 2019 Bot AI Hack
 
-Based on the amazing work of Adam Hockemeyer.  References both the official Microsoft samples and the [Microsoft AI Lab]( https://github.com/microsoft/ailab/tree/master/BuildAnIntelligentBot)
+Based on the amazing work of Adam Hockemeyer.  
 
-The following is an exploration of the Bot Framework 4.4+ - using the Microsoft samples to create a use case for Bots.
+This project starts from the official Microsoft bot [samples](https://github.com/Microsoft/BotBuilder-Samples/tree/master/samples/csharp_dotnetcore) and the [Microsoft AI Lab]( https://github.com/microsoft/ailab/tree/master/BuildAnIntelligentBot)
+
+The following is an exploration of the Bot Framework 4.4.3+ - using the Microsoft samples to create a use case for Bots.
 
 The Bot includes Luis, QnA Maker, exploration of OAuth cards, and 3rd-party API calls.
 
 ### WORKING WITH LUIS
 
-In the official Microsoft samples, run Core-Bot.
+From the official Microsoft[samples](https://github.com/Microsoft/BotBuilder-Samples/tree/master/samples/csharp_dotnetcore), run the project Core-Bot.  We assume you're working from Visual Studio and already have downloaded the [pre-requistes](https://docs.microsoft.com/en-us/azure/bot-service/dotnet/bot-builder-dotnet-sdk-quickstart?view=azure-bot-service-4.0#prerequisites).
 
 It will show and adaptive card with workable links.
 
