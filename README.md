@@ -380,81 +380,78 @@ Everything is triggered from the MainDialog.  If the "Book_flight" intent is det
 At the end of MainDialog look for the following:
 
 ```
-        private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            // If the child dialog ("BookingDialog") was cancelled or the user failed to confirm, the Result here will be null.
-            if (stepContext.Result != null)
-            {
-                var result = (BookingDetailsModel)stepContext.Result;
+private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+{
+     // If the child dialog ("BookingDialog") was cancelled or the user failed to confirm, the Result here will be null.
+     if (stepContext.Result != null)
+     {
+          var result = (BookingDetailsModel)stepContext.Result;
+          // Now we have all the booking details call the booking service.
+          // If the call to the booking service was successful tell the user.
 
-                // Now we have all the booking details call the booking service.
-
-                // If the call to the booking service was successful tell the user.
-
-                var timeProperty = new TimexProperty(result.TravelDate);
-                var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);
-                var msg = $"I have you booked to {result.Destination} from {result.Origin} on {travelDateMsg}";
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
-            }
-            else
-            {
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thank you."), cancellationToken);
-            }
-            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-        }
+          var timeProperty = new TimexProperty(result.TravelDate);
+          var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);
+          var msg = $"I have you booked to {result.Destination} from {result.Origin} on {travelDateMsg}";
+          await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
+     }
+     else
+     {
+          await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thank you."), cancellationToken);
+     }
+     return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+}
 ```
 
 Copy it - for the next steps.  And then simplify it to:
 
 ```
-        private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-		await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thank you."), cancellationToken);
-		return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-	}
+private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+{
+     await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thank you."), cancellationToken);
+     return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+}
 ```
 
 Let's go to BookingDialog.cs - the final step is currently:
 ```
-        private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            if ((bool)stepContext.Result)
-            {
-                var bookingDetails = (BookingDetailsModel)stepContext.Options;
+private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+{
+     if ((bool)stepContext.Result)
+     {
+          var bookingDetails = (BookingDetailsModel)stepContext.Options;
 
-                return await stepContext.EndDialogAsync(bookingDetails, cancellationToken);
-            }
-            else
-            {
-                return await stepContext.EndDialogAsync(null, cancellationToken);
-            }
-
-        }
+          return await stepContext.EndDialogAsync(bookingDetails, cancellationToken);
+     }
+     else
+     {
+          return await stepContext.EndDialogAsync(null, cancellationToken);
+     }
+}
 ```
 
 Change it to:  (We've transfered the SendActivityAsync, changed the name of the variable to match what is in this class, and end the dialog without passing on another object:
 ```
-        private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            if ((bool)stepContext.Result)
-            {
-                var bookingDetails = (BookingDetailsModel)stepContext.Options;
+private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+{
+     if ((bool)stepContext.Result)
+     {
+          var bookingDetails = (BookingDetailsModel)stepContext.Options;
 
-                // Now we have all the booking details call the booking service.
-                // If the call to the booking service was successful tell the user.
+          // Now we have all the booking details call the booking service.
+          // If the call to the booking service was successful tell the user.
 
-                var timeProperty = new TimexProperty(bookingDetails.TravelDate);
-                var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);
-                var msg = $"I have you booked to {bookingDetails.Destination} from {bookingDetails.Origin} on {travelDateMsg}";
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
+          var timeProperty = new TimexProperty(bookingDetails.TravelDate);
+          var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);               
+	  var msg = $"I have you booked to {bookingDetails.Destination} from {bookingDetails.Origin} on {travelDateMsg}";
+          await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
                 
-                return await stepContext.EndDialogAsync(null, cancellationToken);
-            }
-            else
-            {
-                return await stepContext.EndDialogAsync(null, cancellationToken);
-            }
-        }
+          return await stepContext.EndDialogAsync(null, cancellationToken);
+     }
+     else
+     {
+          return await stepContext.EndDialogAsync(null, cancellationToken);
+     }
+}
 ```
 
 We've isolated the dialog.  Now we're going to add the OAuth dialog.
@@ -462,6 +459,7 @@ We've isolated the dialog.  Now we're going to add the OAuth dialog.
 Look through the AuthenicationBot - most of the plumbing is similar to what we've been used for the CoreBot.
 
 The main things we want be looking at are MainDialog and the LogoutDialog; however there are some bit and pieces that are live elsewhere in the project.  
+
 You'll also need to add the MicrosoftAppId from the MicrosoftAppPassword from the Azure portal *both* in the AppSettings.json and in the settings in the Azure emulator. 
 
 In case you run into issues, one potential recommendation is to use AuthenticationBot from the official samples.  Make sure it works there, then transfer the rest of the pieces over as necessary.  
@@ -517,30 +515,29 @@ public MainDialog(IConfiguration configuration, ILogger<MainDialog> logger)
 There is one more piece that you'll need to make this work.  
 In the file, DialogAndWelcomeBot.cs you'll need to this:
 ```
-        protected override async Task OnTokenResponseEventAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
-        {
-            Logger.LogInformation("Running dialog with Token Response Event Activity.");
+protected override async Task OnTokenResponseEventAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
+{
+     Logger.LogInformation("Running dialog with Token Response Event Activity.");
 
-            // Run the Dialog with the new Token Response Event Activity.
-            await Dialog.Run(turnContext, ConversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
-        }
+     // Run the Dialog with the new Token Response Event Activity.
+     await Dialog.Run(turnContext, ConversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
+}
 ```
 
 In your Luis.ai project, add another Intent called "AuthDialog_Intent".  Then in the MainDialog add the following:
 ```
 switch (luisResult.Intent)
-            {
-                case "Book_flight":
-                    //We need to return flight details
-                    // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.
-                    return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
-                case "AuthDialog_Intent":
-                    //Type something like "Oauth card" or "Auth Dialog intent"
-                    //Run the AuthBot Dialog
-                    return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
-                case "None":
-                case "Cancel":
-                default:
+{
+     case "Book_flight":
+          //We need to return flight details
+          // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.               return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
+     case "AuthDialog_Intent":
+          //Type something like "Oauth card" or "Auth Dialog intent"
+          //Run the AuthBot Dialog          
+	  return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
+     case "None":
+     case "Cancel":
+     default:
 ```
 
 You'll then need to follow the details here from the document:
@@ -550,8 +547,8 @@ https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?vi
 * You'll need bot's ID and Password (these will be needed to be added in your project in Visual Studio but also in your emulator).
 * You can create an Azure AD application to test your project as described in the project.  
 However, for this project and the next, we're going to make an app in Salesforce but we still want the redirect URL described in the document (ie. https://token.botframework.com/.auth/web/redirect)
-- There are many official documents and video to create a connected app in saleforce.  Here is one example: https://blog.mkorman.uk/integrating-net-and-salesforce-part-1-rest-api/
-- https://salesforce.stackexchange.com/questions/40346/where-do-i-find-the-client-id-and-client-secret-of-an-existing-connected-app
+     - There are many official documents and video to create a connected app in saleforce.  Here is one example: https://blog.mkorman.uk/integrating-net-and-salesforce-part-1-rest-api/
+     - https://salesforce.stackexchange.com/questions/40346/where-do-i-find-the-client-id-and-client-secret-of-an-existing-connected-app
 
 Run the application, try signing in with your salesforce account and make sure you can aquire the token.
 
@@ -600,10 +597,12 @@ Take the account number after the "Account/" and before the "/view"
 Another salesforce link that could be useful:
 https://developer.salesforce.com/docs/api-explorer/sobject/Contact/get-contact-id
 
-I took the JSON:
+If you want to test everything, try using [Postman](https://www.getpostman.com/).   Use the above urls and account numbers to form the Get request.  You're going to need to copy a new non-expired token from the previous AuthDialog. Under the Url, click the Authorization tab, pick "Bearer Token" and then use the token you copied under the Token field.
+
+From either the salesforce documentation pages or the JSON that is returned in postman - you'll need to convert that into C# objects:
 https://app.quicktype.io/#l=cs&r=json2csharp
 
-We want to add this class to the project - we'll need this as a helper for when we're parsing through the Json that is returned from Salesforce.
+We want to add this class to the project in Visual Studio.  We'll need to add this as a helper for when we're parsing through the JSON that is returned from Salesforce in our API.
 
 Next copy the AuthDialog into a new class called APIDialog.  Remember to register this APIDailog in your MainDialog class in the same way you did for the AuthDialog.  Also make sure in the switch/case statement - you create new case and new Luis intent - let's name it "APIDialog_Intent"
 ```
@@ -614,42 +613,42 @@ case "APIDialog_Intent":
 return await stepContext.BeginDialogAsync(nameof(APIDialog), luisResult, cancellationToken);
 ```
 
-We need a HttpClient to make the call to salesforce - let's look through some various samples:	
+We need a HttpClient to make the call to salesforce - let's look through some various samples to see how HTTP client is used:
 https://github.com/microsoft/ailab/blob/master/BuildAnIntelligentBot/src/ChatBot/Services/TranslatorTextService.cs
 
 We'll take a look here and create a method that will call the API and then return the JSON string.
 
 ```
 public async Task<string> Translate(string sourceLanguage, string targetLanguage, string text)
-        {
-            if (string.Equals(sourceLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
-            {
-                return text; // No translation required
-            }
+{
+     if (string.Equals(sourceLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
+     {
+          return text; // No translation required
+     }
 
-            var body = new System.Object[] { new { Text = text } };
-            var requestBody = JsonConvert.SerializeObject(body);
+     var body = new System.Object[] { new { Text = text } };
+     var requestBody = JsonConvert.SerializeObject(body);
 
-            using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage())
-            {
-                request.Method = HttpMethod.Post;
-                request.RequestUri = new Uri($"{TranslateMethodUri}/translate{UriParams}&to={targetLanguage}");
-                request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-                request.Headers.Add("Ocp-Apim-Subscription-Key", _translatorTextKey);
+     using (var client = new HttpClient())
+     using (var request = new HttpRequestMessage())
+     {
+          request.Method = HttpMethod.Post;
+          request.RequestUri = new Uri($"{TranslateMethodUri}/translate{UriParams}&to={targetLanguage}");
+          request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+          request.Headers.Add("Ocp-Apim-Subscription-Key", _translatorTextKey);
 
-                var response = await client.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var result = JsonConvert.DeserializeObject<List<TextTranslatorResponse>>(responseBody);
-                return result.First().Translations.First().Text;
-            }
-        }
+          var response = await client.SendAsync(request);
+          response.EnsureSuccessStatusCode();
+          var responseBody = await response.Content.ReadAsStringAsync();
+          var result = JsonConvert.DeserializeObject<List<TextTranslatorResponse>>(responseBody);
+          return result.First().Translations.First().Text;
+     }
+}
 ```
 
 Create a similar method at the end of your class definition, but let's change the name of the method SalesforceAPIGetAccountInfo - you're going to need to pass the token in that we've retrieved in the previous project.
 
-Create two new steps in the waterfall dailog.  One called UnformattedJSONSalesforce and the other called FormattedJSONSalesforce.  
+Create two new steps in the waterfall dailog.  One called UnformattedJSONSalesforce and the other called FormattedJSONSalesforce.  Remember to both define the steps but also to put those steps in the waterfall steps array near the top of the class.
 
 Exercise 1:
 For UnformattedJSONSalesforce, recieve the token from the previous step.  Call the new SalesforceAPIGetAccountInfo("your-token-here") and of course pass the token.  Receive a unformatted json string as the result. Display that in the chat bot.
