@@ -5,22 +5,26 @@ Based on the amazing work of Adam Hockemeyer.
 
 This project starts from the official Microsoft bot [samples](https://github.com/Microsoft/BotBuilder-Samples/tree/master/samples/csharp_dotnetcore) and the [Microsoft AI Lab]( https://github.com/microsoft/ailab/tree/master/BuildAnIntelligentBot)
 
-The following is an exploration of the Bot Framework 4.4.3+ - using the Microsoft samples to create a use case for Bots.
+The following is an exploration of the Bot Framework 4.4.3+ - using the official Microsoft samples to create a use case for Bots.
 
 The Bot includes Luis, QnA Maker, exploration of OAuth cards, and 3rd-party API calls.
 
 ### WORKING WITH LUIS
 
-From the official Microsoft[samples](https://github.com/Microsoft/BotBuilder-Samples/tree/master/samples/csharp_dotnetcore), run the project Core-Bot.  We assume you're working from Visual Studio and already have downloaded the [pre-requistes](https://docs.microsoft.com/en-us/azure/bot-service/dotnet/bot-builder-dotnet-sdk-quickstart?view=azure-bot-service-4.0#prerequisites).
+From the official Microsoft[samples](https://github.com/Microsoft/BotBuilder-Samples/tree/master/samples/csharp_dotnetcore), run the project CoreBot.  
 
-It will show and adaptive card with workable links.
+We assume you're working from Visual Studio and have already downloaded the [pre-requistes](https://docs.microsoft.com/en-us/azure/bot-service/dotnet/bot-builder-dotnet-sdk-quickstart?view=azure-bot-service-4.0#prerequisites).
 
-You can try booking a flight - try telling it you want to go from Paris to New York tomorrow (phrased however you'd like).
+Run the CoreBot project; it will show an adaptive card with a large image with buttons which link to relevant websites.
 
-If try typing something however, you'll notice something it is prompting you: 
+By following the prompts, you can try booking a flight - try telling it you want to go from Paris to New York tomorrow (phrased however you'd like).
+
+After you type something however, you'll notice the bot shows a warning: 
+```
 NOTE: LUIS is not configured. To enable all capabilities, add ‘LuisAppId’, ‘LuisAPIKey’ and ‘LuisAPIHostName’ to the appsettings.json file.
+```
 
-So currently the appsettings.json file looks like this:
+Currently the appsettings.json file looks like this:
 
 ```
 {
@@ -32,35 +36,31 @@ So currently the appsettings.json file looks like this:
 }
 ```
 
-Open your browser and go to: www.luis.ai.  You'll need to login with your Azure credentials.
+Open your browser and go to: www.luis.ai.  You'll need to login with your Azure credentials.  Create a project like [this](https://docs.microsoft.com/en-us/azure/cognitive-services/luis/get-started-portal-build-app):
 
+Go back to your www.luis.ai projects > click Build.  Click Create New Intents. Name it: "Book_flight" (copy this exactly as your code looks for this term)
+Then it will prompt you to add "utterances" - I added several, I added some like: "Can I book a flight?"
+
+Once you are done, hit the "Train" button so the utterances are tied to the Intent and then after that is done, hit "Publish" so APIs calls will hit this updated model.  (Note, if you don't hit publish, your new changes will *not* reflect from any API calls.)
+
+Now remember, in Visual Studio in our appsettings.json file, we're looking to fill out the following:
 You're looking for:
 ```
   "LuisAppId": "",
   "LuisAPIKey": "",
   "LuisAPIHostName": ""
 ```
-So go to Luis.Ai and after you've added a project go to Management tab - click through, and you'll be looking for the following terms and what it translates to in the appsettings.json file:
 
+We'll get these values from the Luis.ai portal.  After you've created a Luis project, go to Management tab.  The names in the appsettings.json file are not exactly the same as they are in the portal so look for the equivalent terms in the following chart.  Go ahead and copy these values from the portal.
 ```
-Application Id ==> LuisAppId
-Authoring Key ==> LuisAPIKey
-Key and Endpoints > Endpoint > only the first part of the listed url (ie. "westus.api.cognitive.microsoft.com") ==> LuisAPIHostName
+LuisAppId (In appsettings.json) => Application Id (In Luis portal)  
+LuisAPIKey (In appsettings.json) => Authoring Key (In Luis portal)  
+LuisAPIHostName (In appsettings.json) => Key and Endpoints > Endpoint > only the first part of the listed url (ie. "westus.api.cognitive.microsoft.com") (In Luis portal) 
 ```
-
-Go ahead and add those values to your project.
-
-
-
-
-Go back to your www.luis.ai projects > click Build.  Click Create New Intents. Name it: "Book_flight" (copy this exactly as your code looks for this term)
-Then it will prompt you to add "utterances" - I added several, I added some like: "Can I book a flight?"
-
-Once you are done, hit the "Train" button so the utterances are tied to the Intent and then after that is done, hit "Publish" so APIs calls will hit this updated model.
 
 Now re-run your project from Visual Studio.  
 Restart the conversation in your Emulator.
-Interact with the bot - and try to trigger the Luis to indentify the book a flight intent.
+Interact with the bot - and try to trigger Luis to indentify the "Book_flight" intent.
 
 - This code can be found under branch-1-Working-With-Luis
 
@@ -659,3 +659,4 @@ Exercise 2:
 For FormattedJSONSalesforce, receive the unformatted json from the previous step.  If you've use the https://app.quicktype.io/#l=cs&r=json2csharp link you'll notice at the very top in the comments, it will show how to deserialize the json into the object it detected.
 Use that method and then you should get a C# object.  Then use that to create a better formatted return string for your results.  
  
+ - This code can be found under Branch-4-Working-With-Luis
