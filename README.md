@@ -1,5 +1,4 @@
 # 2019BotAIHack
-2019 Bot AI Hack
 
 Based on the amazing work of Adam Hockemeyer.  
 
@@ -167,49 +166,45 @@ Then, looking through the method, comment out everything except for the structur
 So what remains uncommented should look like this:
 
 ```
-    public static class QnAHelper
-    {
-        public static async Task ExecuteQnAQuery(IConfiguration configuration, ILogger logger, ITurnContext turnContext, CancellationToken cancellationToken)
-        {
-            try
-            {
+public static class QnAHelper
+{
+public static async Task ExecuteQnAQuery(IConfiguration configuration, ILogger logger, ITurnContext turnContext, CancellationToken cancellationToken)
+{
+     try
+     {
 
-
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning($"QnA Exception: {e.Message} Check your QnA configuration.");
-            }
-        }
-    }
+     }
+     catch (Exception e)
+     {
+          logger.LogWarning($"QnA Exception: {e.Message} Check your QnA configuration.");
+     }     
+}
 ```
 
 Now go back to the QnABot project, look at the file QnaBot.cs.  What we want is in the OnMessageActivityAsync. Take the contents there and copy it, into the "try" section of your QnAHelper class.
 
 ```
-           var httpClient = _httpClientFactory.CreateClient();
+var httpClient = _httpClientFactory.CreateClient();
 
-            var qnaMaker = new QnAMaker(new QnAMakerEndpoint
-            {
-                KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
-                EndpointKey = _configuration["QnAAuthKey"],
-                Host = _configuration["QnAEndpointHostName"]
-            },
-            null,
-            httpClient);
+var qnaMaker = new QnAMaker(new QnAMakerEndpoint
+{
+     KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
+     EndpointKey = _configuration["QnAAuthKey"],
+     Host = _configuration["QnAEndpointHostName"]
+}, null, httpClient);
 
-            _logger.LogInformation("Calling QnA Maker");
+_logger.LogInformation("Calling QnA Maker");
 
-            // The actual call to the QnA Maker service.
-            var response = await qnaMaker.GetAnswersAsync(turnContext);
-            if (response != null && response.Length > 0)
-            {
-                await turnContext.SendActivityAsync(MessageFactory.Text(response[0].Answer), cancellationToken);
-            }
-            else
-            {
-                await turnContext.SendActivityAsync(MessageFactory.Text("No QnA Maker answers were found."), cancellationToken);
-            }
+// The actual call to the QnA Maker service.
+var response = await qnaMaker.GetAnswersAsync(turnContext);
+if (response != null && response.Length > 0)
+{
+     await turnContext.SendActivityAsync(MessageFactory.Text(response[0].Answer), cancellationToken);
+}
+else
+{
+     await turnContext.SendActivityAsync(MessageFactory.Text("No QnA Maker answers were found."), cancellationToken);
+}
 ```
 
 You'll notice the warnings - let's handle them.  
@@ -219,6 +214,7 @@ Remove the line:
 var httpClient = _httpClientFactory.CreateClient();
 ```
 And then at the end of the new QnAMaker method remove the words "null, httpClient".
+
 Finally, you're going to need to upload a Nuget packages: "Microsoft.Bot.Builder.AI.QnA"
 After you're done that, right click on QnAMaker and QnAMakerEndpoint, go to QuickActionsAndRefactorings and add the appropriate using statement.
 
@@ -248,13 +244,14 @@ var luisResult = await LuisHelper.ExecuteLuisQuery(Configuration, Logger, stepCo
 
 switch(luisResult.Intent)
 { 
-	case "Book_flight":
-	case "None":
- 	case "Cancel":
-	default:
-		//Default to QnA
-		await QnAHelper.ExecuteQnAQuery(Configuration, Logger, stepContext.Context, cancellationToken);
-		 return await stepContext.BeginDialogAsync(nameof(MainDialog), null)
+     case "Book_flight":
+     case "None":
+     case "Cancel":
+     default:
+          //Default to QnA
+          await QnAHelper.ExecuteQnAQuery(Configuration, Logger, stepContext.Context, cancellationToken);
+     
+     return await stepContext.BeginDialogAsync(nameof(MainDialog), null)
 }
 ```
 
@@ -263,6 +260,7 @@ Now we've got to do two things.
 First, we have to reconfigure the LuisHelper to return an object that returns an Intent and also other details and object that might be important to the Luis results.
 
 Second, we have to make sure that if the intent is Book_flight that it would return an appropriate object - in our case we'll choose BookingDetailsModel.
+
 Then pass the results to the dialog.
 
 So it would look something like this:
@@ -278,9 +276,9 @@ switch(luisResult.Intent)
           return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
 ```
 
+So let's reconfigure the LuisHelper.  
 
-So let's reconfigure the LuisHelper.  We always want it to return an Intent but we also need it to return other objects as necessary.
-So how do we do it?  
+We always want it to return an Intent but we also need it to return other objects as necessary. So how do we do it?  
 
 Let's have it return a base model; let's call it "BaseModel" that will always includes an Intent property.  
 Then if we need to return more detailed objects we'll return those objects and make sure that those detailed objects subclass that base model so anything we return will be acceptable.
@@ -290,46 +288,44 @@ In Visual Studio, create a new folder called "Models".  Add three new Items - th
 They should look like the following respectively.
 
 ```
-    public abstract class BaseModel
-    {
-        public string Intent { get;set;}
-    }
+public abstract class BaseModel
+{
+     public string Intent { get;set;}
+}
 ```
 
 ```
-    public class BookingDetailsModel : BaseModel
-    {
-        public string Destination { get; set; }
-        public string Origin { get; set; }
-        public string TravelDate { get; set; }
-    }
+public class BookingDetailsModel : BaseModel
+{
+     public string Destination { get; set; }
+     public string Origin { get; set; }
+     public string TravelDate { get; set; }
+}
 ```
 
 ```
-     public class NoIntentModel : BaseModel
-     {
+public class NoIntentModel : BaseModel
+{
 
-     }	
+}	
 ```
 
 Go back to the LuisHelper.cs class.  Instead of the method returning a "BookingDetails" object, have it instead return a BaseModel.  This sets us up to return any model we'd like so long as it subclasses the BaseModel abstract class.
 
 The method is organized to return BookingDetails.  We need to reconfigure this so that the appropriate specific return object is dicated by Luis.
 
-
-
 At the end of the "if" statement, return a model that will return an object that still conforms to "BaseModel" but doesn't trigger an Intent (so that the bot will default to QnAMaker):
 
 ```
-     if (intent == "Book_flight")
-     {
-	...
-	...
-     }
-     else
-     {
-          return new NoIntentModel() { Intent = intent };
-     }
+if (intent == "Book_flight")
+{
+     ...
+     ...
+}
+else
+{
+     return new NoIntentModel() { Intent = intent };
+}
 ```
 
 Let's make the return object for the Book_flight intent to be the FlightDetailsModel.
@@ -340,18 +336,18 @@ In the BookingDialog.cs, we're going to need in each step make sure that the obj
 
 You'll need to change the following:
 ```
-            var bookingDetails = (BookingDetails)stepContext.Options;
+var bookingDetails = (BookingDetails)stepContext.Options;
 ```
 
 To this:
 ```
-            var bookingDetails = (BookingDetailsModel)stepContext.Options;
+var bookingDetails = (BookingDetailsModel)stepContext.Options;
 ```
 In the MainDialog.cs, you'll also notice there is a type cast to BookingDetails in FinalStepAsync.  
 
 It will look like this:
 ```
-                var result = (BookingDetailsModel)stepContext.Result;
+var result = (BookingDetailsModel)stepContext.Result;
 ```
 
 Go ahead and run the emulator.  Try triggering the Luis "Book_flight" intent and observe the actions.  
@@ -360,7 +356,7 @@ Now ask question best answered by the QnA service.
 - The above code can be found under branch-2-Working-With-QnA-Maker
 
 Bonus: You'll notice that almost nothing of the details of the Luis intent is picked up by the Bot.  
-The Intent itself is picked up but the Entities are not.  You'll want to add Entities.  Look for the file FlightBooking.json and try creating similar entities.
+Currently, the Intent itself is picked up but the Entities are not.  You'll want to add Entities.  Look for the file FlightBooking.json and try creating similar entities.
 
 Hint:  Try adding: 
 new entity: Airport > List > Values > New York -> new york, new york city 
@@ -377,7 +373,8 @@ If you want to see your Luis models as json to compare, click Train > Publish.  
 
 We're going to add two more dialogs - an OAuth dialog and then a third-party service call dialog.  In our sample, we'll call Salesforce - you can modify this to what you'd like.
 
-A couple things need to change first.  If you've been following along, the sample as it was build assuming only one intent and only one dialog.
+A couple things need to change first.  If you've been following along, the CoreBot sample was built assuming only one intent and only one dialog.
+
 Everything is triggered from the MainDialog.  If the "Book_flight" intent is detected, then the BookingDialog is triggered.  
 
 At the end of MainDialog look for the following:
