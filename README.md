@@ -35,12 +35,12 @@ Currently the appsettings.json file looks like this:
 }
 ```
 
-Open your browser and go to: www.luis.ai.  You'll need to login with your Azure credentials.  Create a project like [this](https://docs.microsoft.com/en-us/azure/cognitive-services/luis/get-started-portal-build-app):
+Open your browser and go to: www.luis.ai.  You'll need to login with your Azure credentials.  Create a project as described [here](https://docs.microsoft.com/en-us/azure/cognitive-services/luis/get-started-portal-build-app):
 
 Go back to your www.luis.ai projects > click Build.  Click Create New Intents. Name it: "Book_flight" (copy this exactly as your code looks for this term)
 Then it will prompt you to add "utterances" - I added several, I added some like: "Can I book a flight?"
 
-Once you are done, hit the "Train" button so the utterances are tied to the Intent and then after that is done, hit "Publish" so APIs calls will hit this updated model.  (Note, if you don't hit publish, your new changes will *not* reflect from any API calls.)
+Once you are done, hit the "Train" button so the utterances are tied to the Intent and then after that is done, hit "Publish" so APIs calls will hit this updated model.  (Note, if you don't hit publish, your new changes will *not* be reflected in any API calls.)
 
 Now remember, in Visual Studio in our appsettings.json file, we're looking to fill out the following:
 You're looking for:
@@ -50,7 +50,8 @@ You're looking for:
   "LuisAPIHostName": ""
 ```
 
-We'll get these values from the Luis.ai portal.  After you've created a Luis project, go to Management tab.  The names in the appsettings.json file are not exactly the same as they are in the portal so look for the equivalent terms in the following chart.  Go ahead and copy these values from the portal.
+We'll get these values from the Luis.ai portal.  After you've created a Luis project, go to the Management tab.  The names in the appsettings.json file are not exactly the same as they are in the portal so look for the equivalent terms in the following chart.  Go ahead and copy the appropriate values from the portal into your project.
+
 ```
 LuisAppId (In appsettings.json) => Application Id (In Luis portal)  
 LuisAPIKey (In appsettings.json) => Authoring Key (In Luis portal)  
@@ -59,9 +60,23 @@ LuisAPIHostName (In appsettings.json) => Key and Endpoints > Endpoint > only the
 
 Now re-run your project from Visual Studio.  
 Restart the conversation in your Emulator.
-Interact with the bot - and try to trigger Luis to indentify the "Book_flight" intent.
+Interact with the bot - and try to trigger Luis to identify the "Book_flight" intent.
+Run the full book flight dialog flow.
 
 - The above code can be found under branch-1-Working-With-Luis
+
+*Bonus*: You'll notice that almost nothing of the details of the Luis intent is picked up by the Bot.  
+Currently, the Intent itself is picked up but the Entities are not.  You'll want to add Entities.  Look for the file FlightBooking.json and try creating similar entities.
+
+Hint:  Try adding: 
+new entity: Airport > List > Values > New York -> new york, new york city 
+new entity: From > Composite > Child > Airport
+prebuilt entity: datetimeV2
+
+Another Hint - you'll need to go to your Book_flight intent and scroll over specific Utterances to tag Composite entities.
+
+If you want to see your Luis models as json to compare, click Train > Publish.  Then go to Manage > Versions > Click on a Version > Export as Json
+
 
 ### Working With Luis and QnA Maker
 
@@ -72,9 +87,9 @@ There is code from a different project in the official Microsoft samples.  We'll
 At a high-level, we'll need to create/configure a QnA Bot.  
 Then, we need to add the settings of the QnA bot into our bot in the appsettings.json file. 
 Then, we'll need code to call the QnA service and appropriately retrieve the results. 
-Then, we'll need to configure the bot to handle the Luis intents (already done) but also to call the QnA service if the intents are not called.
+Then, we'll need to configure the bot to handle the Luis intents (already done) but also to call the QnA service if the Luis intents are not called.
 
-So, let's do the above steps.  To create/configure a QnA knowledge base, follow these two tutorials: 
+So, let's implement the above steps.  To create/configure a QnA knowledge base, follow these two tutorials: 
 https://docs.microsoft.com/en-us/azure/cognitive-services/qnamaker/tutorials/create-publish-query-in-portal
 https://docs.microsoft.com/en-us/azure/cognitive-services/qnamaker/tutorials/create-qna-bot
 
@@ -233,7 +248,7 @@ it is looking for the results of the LuisHelper execution which *currently* retu
 
 Because we want to have multiple Luis results, we don't want to always return a BookingDetails object.  We'd rather have it return instead the Luis intent.
 
-Then we're going to need to receive the Luis intent and the appropriate trigger a corresponding dialog.
+So let’s plan to receive the Luis intent and then appropriately trigger a corresponding dialog.
 
 So comment out the contents of the ActStepAsync method.
 
@@ -257,11 +272,11 @@ switch(luisResult.Intent)
 
 Now we've got to do two things.  
 
-First, we have to reconfigure the LuisHelper to return an object that returns an Intent and also other details and object that might be important to the Luis results.
+First, we have to reconfigure the LuisHelper to return an object that returns an Intent and also other details that might be important to the triggered dialog.
 
-Second, we have to make sure that if the intent is Book_flight that it would return an appropriate object - in our case we'll choose BookingDetailsModel.
+Second, we have to make sure that if the intent is “Book_flight" that it would return an appropriate object - in our case we'll choose BookingDetailsModel.
 
-Then pass the results to the dialog.
+Then, want to pass the results to the triggered dialog.
 
 So it would look something like this:
 ```
@@ -307,12 +322,12 @@ public class BookingDetailsModel : BaseModel
 public class NoIntentModel : BaseModel
 {
 
-}	
+}    
 ```
 
 Go back to the LuisHelper.cs class.  Instead of the method returning a "BookingDetails" object, have it instead return a BaseModel.  This sets us up to return any model we'd like so long as it subclasses the BaseModel abstract class.
 
-The method is organized to return BookingDetails.  We need to reconfigure this so that the appropriate specific return object is dicated by Luis.
+Currently, the method is written to return a BookingDetails class.  We need to rewrite this so that the appropriate specific return object is dictated by the Luis intent .
 
 At the end of the "if" statement, return a model that will return an object that still conforms to "BaseModel" but doesn't trigger an Intent (so that the bot will default to QnAMaker):
 
@@ -343,7 +358,7 @@ To this:
 ```
 var bookingDetails = (BookingDetailsModel)stepContext.Options;
 ```
-In the MainDialog.cs, you'll also notice there is a type cast to BookingDetails in FinalStepAsync.  
+In the MainDialog.cs, you'll also notice there is a type cast to BookingDetails in FinalStepAsync - make sure the object is cast to BookingDetailsModel.  
 
 It will look like this:
 ```
@@ -354,18 +369,6 @@ Go ahead and run the emulator.  Try triggering the Luis "Book_flight" intent and
 Now ask question best answered by the QnA service.
 
 - The above code can be found under branch-2-Working-With-QnA-Maker
-
-Bonus: You'll notice that almost nothing of the details of the Luis intent is picked up by the Bot.  
-Currently, the Intent itself is picked up but the Entities are not.  You'll want to add Entities.  Look for the file FlightBooking.json and try creating similar entities.
-
-Hint:  Try adding: 
-new entity: Airport > List > Values > New York -> new york, new york city 
-new entity: From > Composite > Child > Airport
-prebuilt entity: datetimeV2
-
-Another Hint - you'll need to go to your Book_flight intent and scroll over specific Utterances to tag Composite entities.
-
-If you want to see your Luis models as json to compare, click Train > Publish.  Then go to Manage > Versions > Click on a Version > Export as Json
 
 ### ADDING OUR OWN DIALOGS
 
@@ -402,7 +405,7 @@ private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepCon
 }
 ```
 
-Copy it - for the next steps.  And then simplify it to:
+Copy it - for the following steps.  We’re going to move it elsewhere in our project.  But for now, just simply that method in the MainDialog to:
 
 ```
 private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -429,7 +432,7 @@ private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepCon
 }
 ```
 
-Change it to:  (We've transfered the SendActivityAsync, changed the name of the variable to match what is in this class, and end the dialog without passing on another object:
+Change it to:  (We've copied over the SendActivityAsync from the MainDialog, changed the name of the variables to match what is in this class, and end the dialog without passing on another object:
 ```
 private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
 {
@@ -442,7 +445,7 @@ private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepCon
 
           var timeProperty = new TimexProperty(bookingDetails.TravelDate);
           var travelDateMsg = timeProperty.ToNaturalLanguage(DateTime.Now);               
-	  var msg = $"I have you booked to {bookingDetails.Destination} from {bookingDetails.Origin} on {travelDateMsg}";
+          var msg = $"I have you booked to {bookingDetails.Destination} from {bookingDetails.Origin} on {travelDateMsg}";
           await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
                 
           return await stepContext.EndDialogAsync(null, cancellationToken);
@@ -454,9 +457,9 @@ private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepCon
 }
 ```
 
-We've isolated the dialog.  Now we're going to add the OAuth dialog.
+We've isolated the flight booking dialog.  This is good so that we can add other dialogs to the project as needed.  Now we're going to add the OAuth dialog.
 
-Look through the AuthenicationBot - most of the plumbing is similar to what we've been used for the CoreBot.
+Look through the AuthenicationBot - most of the plumbing is similar to what we've used for the CoreBot.
 
 The main things we want be looking at are MainDialog and the LogoutDialog; however there are some bit and pieces that are live elsewhere in the project.  
 
@@ -486,7 +489,6 @@ namespace Microsoft.BotBuilderSamples
             : base(nameof(MainDialog), configuration["ConnectionName"])
         {
             Logger = logger;
-
 ```
 
 We'll need to change it something like this:
@@ -498,7 +500,6 @@ namespace CoreBot.AuthDialogs
         public AuthDialog(IConfiguration configuration)
             : base(nameof(AuthDialog), configuration["ConnectionName"])
         {
-
 ```
 
 You'll need to add a couple things - when you add a Dialog, you've got to register it so the Bot can keep track of it.
@@ -530,42 +531,43 @@ switch (luisResult.Intent)
 {
      case "Book_flight":
           //We need to return flight details
-          // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.               return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
+          // Run the BookingDialog giving it whatever details we have from the LUIS call, it will fill out the remainder.               
+         return await stepContext.BeginDialogAsync(nameof(BookingDialog), luisResult, cancellationToken);
      case "AuthDialog_Intent":
           //Type something like "Oauth card" or "Auth Dialog intent"
           //Run the AuthBot Dialog          
-	  return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
+      return await stepContext.BeginDialogAsync(nameof(AuthDialog), luisResult, cancellationToken);
      case "None":
      case "Cancel":
      default:
 ```
 
-You'll then need to follow the details here from the document:
+You'll then need to follow the details here from the document - there are several steps you’ll need to complete in the Azure portal and then tie back into your bot:
 https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv1%2Ccsharp%2Cbot-oauth#create-your-bot-resource-on-azure
 
 * You'll need a Bot Channel Registration
 * You'll need bot's ID and Password (these will be needed to be added in your project in Visual Studio but also in your emulator).
-* You can create an Azure AD application to test your project as described in the project.  
-However, for this project and the next, we're going to make an app in Salesforce but we still want the redirect URL described in the document (ie. https://token.botframework.com/.auth/web/redirect)
-     - There are many official documents and video to create a connected app in saleforce.  Here is one example: https://blog.mkorman.uk/integrating-net-and-salesforce-part-1-rest-api/
+* You can create an Azure AD application to test your project as described in the above documentation.  
+However, for this project and the next, we're going to make an app in Salesforce.  We will still need the redirect URL described in above documentation (ie. https://token.botframework.com/.auth/web/redirect)
+     - There are many official documents and video to create a connected app in Salesforce.  Here are two helpful examples: https://blog.mkorman.uk/integrating-net-and-salesforce-part-1-rest-api/
      - https://salesforce.stackexchange.com/questions/40346/where-do-i-find-the-client-id-and-client-secret-of-an-existing-connected-app
 
-Run the application, try signing in with your salesforce account and make sure you can aquire the token.
+Run the application, try signing in with your Salesforce account and make sure you can acquire the token.
 
  - The above code can be found under Branch-3-Working-With-AuthDialog
 
 ##### Working with a 3rd-party API 
 
-Let's recreate the same Oauth project but extend it.  Let's use the token and then with an HttpClient call Salesforce.
+Let's recreate the same Oauth dialog but extend it.  Let's use the token and then with an HttpClient call Salesforce and grab some data.
 
-Here's where the apps are.  Here's how to navigate to your apps > Platform Tools > Apps > App Manager
+Here's where the apps are in Salesforce.  Here's how to navigate to your apps > Platform Tools > Apps > App Manager
 https://na132.lightning.force.com/lightning/setup/NavigationMenus/home
 
-We need data!  So in salesforce, go through and create an Account and Contact:
+We need data!  So in salesforce, go through and create an Account and Contact (some of these links may not work if you haven’t created an Account or a Contact in Salesforce yet):
 https://na132.lightning.force.com/lightning/page/home
 https://na132.lightning.force.com/lightning/o/Contact/list?filterName=Recent
 https://na132.lightning.force.com/lightning/o/Account/list?filterName=Recent
-You can took look an old contact: https://na132.lightning.force.com/lightning/r/Contact/0034P00002VDKB6QAP/view
+You can took look an existing contact: https://na132.lightning.force.com/lightning/r/Contact/0034P00002VDKB6QAP/view
 
 Now URL do use to get info from Salesforce?
 
@@ -573,11 +575,11 @@ Look for the API developer reference:
 https://developer.salesforce.com/docs/api-explorer/sobject/Account/get-account-id/try
 
 It gives you the URL:
-GET/services/data/v39.0/sobjects/Account/{Id}
+GET /services/data/v39.0/sobjects/Account/{Id}
 
-And the base URL - you can find by pressing the gear settings button on the upper right of the live response.	
+And the base URL - you can find by pressing the gear settings button on the upper right of the live response.    
 
-Press the Gear "Settings" Button on the upper right of the Live Response:  (The "Instance" Url is what you're looking for).
+Press the Gear "Settings" Button on the upper right of the Live Response and you’ll see a pop-up that shows something like this:  (The "Instance" Url is what you're looking for).
 Connection Settings
 Username:
 myemailaddy@myemail.com
@@ -586,25 +588,30 @@ https://na132.salesforce.com
 My Domain:
 <none>
 
-To look for an *Account* from your saleforce account, I pulled up a link like this.  I went to recent accounts:
+If you’re looking for an *Account* number from your saleforce account, I pulled up a link like this.  I went to recent accounts:
 https://na132.lightning.force.com/lightning/o/Account/list?filterName=Recent
 
 Clicked an account and you get a url like this:
 https://na132.lightning.force.com/lightning/r/Account/0014P000027LgWKQA0/view
 
-Take the account number after the "Account/" and before the "/view"
+Take the account number is after the "Account/" and before the "/view”.  I’m going to hardcode that into my project — but you’ll need to find your own account number to use.
 
-Another salesforce link that could be useful:
-https://developer.salesforce.com/docs/api-explorer/sobject/Contact/get-contact-id
+Now, go back to the API document to an account (https://developer.salesforce.com/docs/api-explorer/sobject/Account/get-account-id/try) and try running it!
 
-If you want to test everything, try using [Postman](https://www.getpostman.com/).   Use the above urls and account numbers to form the Get request.  You're going to need to copy a new non-expired token from the previous AuthDialog. Under the Url, click the Authorization tab, pick "Bearer Token" and then use the token you copied under the Token field.
+A lot has been done for you automagically in the document page - I like to make sure it works in Postman first to make sure it works from a 3rd-party API perspective.  If you want to test the URLs with the tokens, try using [Postman](https://www.getpostman.com/).   Use the above urls and account numbers to form the Get request.  You're going to need to copy a new non-expired token from the previous AuthDialog from your bot.  Once you have that token, go back to Postman.  Under the Url section, click the Authorization tab, pick "Bearer Token" and then use the token you copied in the Token field.  Try running that request and make sure you successfully receive a relevant JSON response.
 
 From either the salesforce documentation pages or the JSON that is returned in postman - you'll need to convert that into C# objects:
 https://app.quicktype.io/#l=cs&r=json2csharp
 
 We want to add this class to the project in Visual Studio.  We'll need to add this as a helper for when we're parsing through the JSON that is returned from Salesforce in our API.
 
-Next copy the AuthDialog into a new class called APIDialog.  Remember to register this APIDailog in your MainDialog class in the same way you did for the AuthDialog.  Also make sure in the switch/case statement - you create new case and new Luis intent - let's name it "APIDialog_Intent"
+Before we start making the rest of the changes, I want to point out another potential API in salesforce you could have used:
+https://developer.salesforce.com/docs/api-explorer/sobject/Contact/get-contact-id  There are many different endpoints you can use in your project.
+
+Let’s continue on with our project.  We’re going to copy the AuthDialog and then extend it.  So create a new class called APIDialog; copy the contents of the AuthDialog into that class.  *Remember to register* this new APIDialog in your MainDialog class in the same way you did for the AuthDialog.  Also make sure in the switch/case statement - you create a new case, let's call the new intent  “APIDialog_Intent”.  Of course, create new Intent in your Luis.ai project with the name “APIDialog_Intent”.  Don’t forget to *both* Train and Publish it!
+
+In your MainDialog, you should see something like:
+
 ```
 case "APIDialog_Intent":
 //Type something like "Salesforce query" or "I need to check my quota" "I need to check my sales targets"
@@ -613,7 +620,7 @@ case "APIDialog_Intent":
 return await stepContext.BeginDialogAsync(nameof(APIDialog), luisResult, cancellationToken);
 ```
 
-We need a HttpClient to make the call to salesforce - let's look through some various samples to see how HTTP client is used:
+We need a HttpClient to make the call to Salesforce - let's look through some various samples to see how HTTP client is used:
 https://github.com/microsoft/ailab/blob/master/BuildAnIntelligentBot/src/ChatBot/Services/TranslatorTextService.cs
 
 We'll take a look here and create a method that will call the API and then return the JSON string.
@@ -648,10 +655,10 @@ public async Task<string> Translate(string sourceLanguage, string targetLanguage
 
 Create a similar method at the end of your class definition, but let's change the name of the method SalesforceAPIGetAccountInfo - you're going to need to pass the token in that we've retrieved in the previous project.
 
-Create two new steps in the waterfall dailog.  One called UnformattedJSONSalesforce and the other called FormattedJSONSalesforce.  Remember to both define the steps but also to put those steps in the waterfall steps array near the top of the class.
+Create two new steps in the waterfall dailog.  One called UnformattedJSONSalesforce and the other called FormattedJSONSalesforce.  Remember to both define the steps (near the bottom of the current class definition) but also to declare those steps in the Waterfall Steps array near the top of the class.
 
 Exercise 1:
-For UnformattedJSONSalesforce, recieve the token from the previous step.  Call the new SalesforceAPIGetAccountInfo("your-token-here") and of course pass the token.  Receive a unformatted json string as the result. Display that in the chat bot.
+For UnformattedJSONSalesforce, recieve the token from the previous step.  Call the new SalesforceAPIGetAccountInfo("your-token-here") and of course pass the token.  Receive a unformatted json string as the result. Display that in the chat bot.  (The unformatted JSON should be the same thing you’ve received from Postman.
 
 Exercise 2:
 For FormattedJSONSalesforce, receive the unformatted json from the previous step.  If you've use the https://app.quicktype.io/#l=cs&r=json2csharp link you'll notice at the very top in the comments, it will show how to deserialize the json into the object it detected.
